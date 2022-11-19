@@ -78,7 +78,7 @@ while(True):
         print("##### video_link", video_link)
         
         ## open browser
-        if "//www.youtube.com/watch?v=" in video_link:
+        if "//www.youtube.com/" in video_link:
             if video_link[-1] == ":":
                 video_link = video_link[:-1]
 

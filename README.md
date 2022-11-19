@@ -1,6 +1,6 @@
 # mocri url monitoring
 ## mocriの画面を監視し，URLを取得するものです．
-## ※localの画面を監視するだけのプログラムのため，mocri側のサーバーへ負荷をかける処理はありません．
+※localの画面を監視するだけのプログラムのため，mocri側のサーバーへ負荷をかける処理はありません．
 
 ### installするもの
     - pip3 install pyautogui

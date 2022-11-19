@@ -39,7 +39,7 @@ def replace_link_text(url):
     if "," in url:
         url = url.split(",")[0]
     url = "http" + url
-    url = url.replace("l","I")
+    # url = url.replace("l","I")
     # url = url.replace("S","5")
     url = url.replace("O","0")
     url = url.replace("™","")

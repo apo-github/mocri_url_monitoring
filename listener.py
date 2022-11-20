@@ -8,28 +8,36 @@ from PIL import Image
 import sys
 import webbrowser
 
-th = 50 #URLあるかの閾値
+th = 40 #URLあるかの閾値
+img_path = "./img/obj.png"
 sleep_time = 0.5
 init = load.load() ## object生成
 init.run() #最初のスクリーンショットをとる
 img_name = 1
 is_browser_open = False #False:閉じている
 
-def image_to_text(src):
-    pyocr.tesseract.TESSERACT_CMD = 'C:/Program Files/Tesseract-OCR/tesseract.exe'
-    tools = pyocr.get_available_tools()
-    if len(tools) == 0:
-        print("No OCR tool found")
-        sys.exit(1)
+def image_click(src):
+    p = gui.locateOnScreen(src)
+    x,y = gui.center(p)
+    print("### click locatinon", p)
+    gui.moveTo(x,y ,duration=1) #duration:how many times do you use until click
+    gui.click(x,y)
 
-    tool = tools[0]
+# def image_to_text(src):
+#     pyocr.tesseract.TESSERACT_CMD = 'C:/Program Files/Tesseract-OCR/tesseract.exe'
+#     tools = pyocr.get_available_tools()
+#     if len(tools) == 0:
+#         print("No OCR tool found")
+#         sys.exit(1)
 
-    dst = tool.image_to_string(
-        Image.open(src),
-        lang='eng',
-        builder = pyocr.builders.TextBuilder(tesseract_layout=6) #OCRの設定 6：サイズの同じテキストが一列に並んでいる
-    )
-    return dst  
+#     tool = tools[0]
+
+#     dst = tool.image_to_string(
+#         Image.open(src),
+#         lang='eng',
+#         builder = pyocr.builders.TextBuilder(tesseract_layout=6) #OCRの設定 6：サイズの同じテキストが一列に並んでいる
+#     )
+#     return dst  
 
 def close_browser():
     gui.hotkey("ctrl","2")
@@ -68,26 +76,13 @@ while(True):
         img_name = 0
 
     if percent > th:
-        ## OCR処理
-        text = image_to_text("./img/0.jpg")
-        # print(text) ##全文
-        ## httpの文字列のみ抽出
-        http_texts = text.split("https")
-        video_link = http_texts[-1]
-        video_link = replace_link_text(video_link)
-        print("##### video_link", video_link)
-        
-        ## open browser
-        if "//www.youtube.com/watch?v=" in video_link:
-            if video_link[-1] == ":":
-                video_link = video_link[:-1]
-
+        ## 画像クリックによる処理
+        try:
             if is_browser_open: #前に開いたタブがあるなら閉じる
                 close_browser()
                 is_browser_open = False
             
-            webbrowser.open(video_link)
-
+            p = image_click(img_path) #画像位置認識
             is_browser_open = True #ブラウザを開いたため，flagを切り替え
             time.sleep(5)
             ## mocriのタブへ移動 ctl+shift+tab
@@ -98,9 +93,31 @@ while(True):
             img.save("./img/0.jpg")
             img.save("./img/1.jpg")
 
-            
-            
+        except Exception as ex:
+            print("対象が見つかりませんでした。")
+            print(ex)
         
+        ## 文字認識によるクリック判定処理(文字認識精度が悪く．断念)
+        # if "//www.youtube.com/watch?v=" in video_link:
+        #     if video_link[-1] == ":":
+        #         video_link = video_link[:-1]
+
+        #     if is_browser_open: #前に開いたタブがあるなら閉じる
+        #         close_browser()
+        #         is_browser_open = False
+            
+        #     webbrowser.open(video_link)
+
+        #     is_browser_open = True #ブラウザを開いたため，flagを切り替え
+        #     time.sleep(5)
+        #     ## mocriのタブへ移動 ctl+shift+tab
+        #     gui.hotkey("ctrl", "1")
+        #     time.sleep(1)
+        #     ## screenを更新
+        #     img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
+        #     img.save("./img/0.jpg")
+        #     img.save("./img/1.jpg")
+
     ## delete a file
     os.remove("./img/{0}.jpg".format(img_name))
     

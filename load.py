@@ -37,6 +37,7 @@ class load:
             return False #Listener停止
 
     def run(self):
+        print("監視範囲を選択してください\n「shift + win + s」で起動できます．")
         with mouse.Listener(
             on_click=self.on_click
         ) as listener:

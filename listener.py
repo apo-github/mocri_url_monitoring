@@ -23,6 +23,7 @@ sleep_time = 0.5
 init = load.load() ## object生成
 init.run() #最初のスクリーンショットをとる
 img_name = 1 #生成される画像名
+on_play = True #再生中かどうか
 
 def is_image(src): #指定のimgが画面上にあるか
     p = gui.locateOnScreen(src)
@@ -84,6 +85,8 @@ def is_tab(text):
 def close_browser():
     gui.hotkey("ctrl","2")
     gui.hotkey("ctrl","w")
+    time.sleep(3)
+            
 
 
 def replace_link_text(url):
@@ -98,7 +101,8 @@ def replace_link_text(url):
     url = url.replace(" ","") #replace空白除去
     print("#### url", url)
     return url
-
+    
+on_play = False
 # 監視ループ
 while(True):
     img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
@@ -118,48 +122,56 @@ while(True):
     else:
         img_name = 0
             
-    if is_image and (percent > th):
-        ## 画像クリックによる処理
-        try:
-            if is_tab("YouTube"): #前に開いたタブがあるなら閉じる
+    
+    if percent > th:
+        ## stop命令の場合
+        if is_image(img_path_stop):
+            #前に開いたタブがあるなら閉じる
+            if is_tab("YouTube"):
                 close_browser()
+                on_play = False
+
+        if not on_play and is_image(img_path): #play状態じゃない時に実行
+            on_play = True
+            ## 画像クリックによる処理
+            try:
+                time.sleep(3) 
+                image_click(img_path) #画像位置認識
+                ## mocriのタブへ移動 ctl+shift+tab
+                gui.hotkey("ctrl", "1")
+                time.sleep(3)
+                ## screenを更新
+                img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
+                img.save("./img/0.jpg")
+                img.save("./img/1.jpg")
+                time.sleep(2)
+
+            except Exception as ex:
+                print("対象が見つかりませんでした。")
+                print(ex)
             
-            image_click(img_path) #画像位置認識
-            ## mocriのタブへ移動 ctl+shift+tab
-            gui.hotkey("ctrl", "1")
-            time.sleep(3)
-            ## screenを更新
-            img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
-            img.save("./img/0.jpg")
-            img.save("./img/1.jpg")
-            time.sleep(2)
+            ## 文字認識によるクリック判定処理(文字認識精度が悪く．断念)
+            # if "//www.youtube.com/watch?v=" in video_link:
+            #     if video_link[-1] == ":":
+            #         video_link = video_link[:-1]
 
-        except Exception as ex:
-            print("対象が見つかりませんでした。")
-            print(ex)
-        
-        ## 文字認識によるクリック判定処理(文字認識精度が悪く．断念)
-        # if "//www.youtube.com/watch?v=" in video_link:
-        #     if video_link[-1] == ":":
-        #         video_link = video_link[:-1]
+            #     if is_browser_open: #前に開いたタブがあるなら閉じる
+            #         close_browser()
+            #         is_browser_open = False
+                
+            #     webbrowser.open(video_link)
 
-        #     if is_browser_open: #前に開いたタブがあるなら閉じる
-        #         close_browser()
-        #         is_browser_open = False
-            
-        #     webbrowser.open(video_link)
+            #     is_browser_open = True #ブラウザを開いたため，flagを切り替え
+            #     time.sleep(5)
+            #     ## mocriのタブへ移動 ctl+shift+tab
+            #     gui.hotkey("ctrl", "1")
+            #     time.sleep(1)
+            #     ## screenを更新
+            #     img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
+            #     img.save("./img/0.jpg")
+            #     img.save("./img/1.jpg")
 
-        #     is_browser_open = True #ブラウザを開いたため，flagを切り替え
-        #     time.sleep(5)
-        #     ## mocriのタブへ移動 ctl+shift+tab
-        #     gui.hotkey("ctrl", "1")
-        #     time.sleep(1)
-        #     ## screenを更新
-        #     img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
-        #     img.save("./img/0.jpg")
-        #     img.save("./img/1.jpg")
-
-    ## delete a file
+        ## delete a file
     os.remove("./img/{0}.jpg".format(img_name))
     
 

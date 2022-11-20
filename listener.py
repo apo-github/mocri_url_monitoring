@@ -3,26 +3,66 @@ import load
 import cv2
 import os
 import time
-import pyocr
-from PIL import Image
-import sys
-import webbrowser
+import ctypes
+from ctypes import wintypes
+# import pyocr
+# from PIL import Image
+# import sys
+# import webbrowser
 
-th = 40 #URLあるかの閾値
+
+
+#### Full HDモニタの場合，アプリが画面半分の状態かつ80%の大きさの時，適切に動くよう以下を調整してあります．
+th = 60 #URLあるかの閾値
+stop_th = 40 #youtube stop閾値
 img_path = "./img/obj.png"
+img_path_stop = "./img/stop.png"
 sleep_time = 0.5
 init = load.load() ## object生成
 init.run() #最初のスクリーンショットをとる
-img_name = 1
-is_browser_open = False #False:閉じている
+img_name = 1 #生成される画像名
+
+def is_image(src): #指定のimgが画面上にあるか
+    p = gui.locateOnScreen(src)
+    if p == None: #画像ない
+        return False
+    return True #画像ある
 
 def image_click(src):
     p = gui.locateOnScreen(src)
     x,y = gui.center(p)
     print("### click locatinon", p)
-    gui.moveTo(x,y ,duration=1) #duration:how many times do you use until click
+    gui.moveTo(x,y ,duration=0.5) #duration:how many times do you use until click
     gui.click(x,y)
+    time.sleep(3)
 
+
+def list_windows():
+    user32 = ctypes.windll.user32
+    WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM,)
+    result = []
+    def enum_proc(hWnd, lParam):
+        if user32.IsWindowVisible(hWnd):
+            length = user32.GetWindowTextLengthW(hWnd) + 1
+            title = ctypes.create_unicode_buffer(length)
+            user32.GetWindowTextW(hWnd, title, length)
+            result.append([title.value])
+        return True
+    user32.EnumWindows(WNDENUMPROC(enum_proc), 0)
+    return sorted(result)
+
+def is_tab(text):
+    res = False
+    gui.hotkey("ctrl", "2")
+    for i in range(len(list_windows())):
+        if text in list_windows()[i][0]: #あった場合
+            print("{0}が開かれています".format(text))
+            res = True
+    gui.hotkey("ctrl", "1") #タブをもとに戻す
+    time.sleep(5)
+
+    return res
+        
 # def image_to_text(src):
 #     pyocr.tesseract.TESSERACT_CMD = 'C:/Program Files/Tesseract-OCR/tesseract.exe'
 #     tools = pyocr.get_available_tools()
@@ -42,6 +82,7 @@ def image_click(src):
 def close_browser():
     gui.hotkey("ctrl","2")
     gui.hotkey("ctrl","w")
+
 
 def replace_link_text(url):
     if "," in url:
@@ -74,24 +115,22 @@ while(True):
         img_name = 1
     else:
         img_name = 0
-
-    if percent > th:
+            
+    if is_image and (percent > th):
         ## 画像クリックによる処理
         try:
-            if is_browser_open: #前に開いたタブがあるなら閉じる
+            if is_tab("YouTube"): #前に開いたタブがあるなら閉じる
                 close_browser()
-                is_browser_open = False
             
-            p = image_click(img_path) #画像位置認識
-            is_browser_open = True #ブラウザを開いたため，flagを切り替え
-            time.sleep(5)
+            image_click(img_path) #画像位置認識
             ## mocriのタブへ移動 ctl+shift+tab
             gui.hotkey("ctrl", "1")
-            time.sleep(1)
+            time.sleep(3)
             ## screenを更新
             img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
             img.save("./img/0.jpg")
             img.save("./img/1.jpg")
+            time.sleep(2)
 
         except Exception as ex:
             print("対象が見つかりませんでした。")

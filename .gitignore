@@ -1,4 +1,5 @@
 /__pychache__/*
 /img/*
-!/img/obj.jpg
+!/img/obj.png
+!/img/stop.png
 test.py

@@ -101,7 +101,7 @@ def replace_link_text(url):
     url = url.replace(" ","") #replace空白除去
     print("#### url", url)
     return url
-    
+
 on_play = False
 # 監視ループ
 while(True):
@@ -135,7 +135,7 @@ while(True):
             on_play = True
             ## 画像クリックによる処理
             try:
-                time.sleep(3) 
+                time.sleep(3)
                 image_click(img_path) #画像位置認識
                 ## mocriのタブへ移動 ctl+shift+tab
                 gui.hotkey("ctrl", "1")

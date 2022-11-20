@@ -12,9 +12,11 @@ from ctypes import wintypes
 
 
 
-#### Full HDモニタの場合，アプリが画面半分の状態かつ80%の大きさの時，適切に動くよう以下を調整してあります．
-th = 60 #URLあるかの閾値
-stop_th = 40 #youtube stop閾値
+############################
+# 自分で設定するパラメータ
+# thの初期値は．Full HDモニタの場合，アプリが画面半分の状態かつ80%の大きさの時，の環境で動くよう調整した閾値です．
+th = 60 #URLあるか，yt stop があるかの閾値
+#############################
 img_path = "./img/obj.png"
 img_path_stop = "./img/stop.png"
 sleep_time = 0.5

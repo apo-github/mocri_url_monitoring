@@ -23,7 +23,7 @@ class load:
         self.height = abs(released_position[1] - pressed_position[1])
         print(self.pressed_position[0],self.pressed_position[1], self.width, self.height)
         img = gui.screenshot(region=(self.pressed_position[0],self.pressed_position[1],self.width, self.height))
-        img.save("./img/0.jpg")
+        img.save("./diff_img/0.jpg")
 
     def on_click(self, x, y, button, pressed): #引数は4つ必須,使用は1つでも構わない
         if pressed: #pressedされた

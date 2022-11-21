@@ -10,15 +10,15 @@ from ctypes import wintypes
 # import sys
 # import webbrowser
 
-
+#TODO 同じURL画像でもpyautoguiで認識できる時とできない時がある．理由がわからない
 
 ############################
 # 自分で設定するパラメータ
-# thの初期値は．Full HDモニタの場合，アプリが画面半分の状態かつ80%の大きさの時，の環境で動くよう調整した閾値です．
-th = 60 #URLあるか，yt stop があるかの閾値
+# th：画像の差分がこの値を下回った時，変化が起こったと認識します(同じ画像であればth=1.0)．初期値は．Full HDモニタの場合，アプリが画面半分の状態かつ80%の大きさの時，の環境で動くよう調整した閾値です．
+th = 0.997 #URLあるか，yt stop があるかの閾値
 #############################
-img_path = "./img/obj.png"
-img_path_stop = "./img/stop.png"
+img_path = "./obj.png"
+img_path_stop = "./stop.png"
 sleep_time = 0.5
 init = load.load() ## object生成
 init.run() #最初のスクリーンショットをとる
@@ -32,16 +32,19 @@ def is_image(src): #指定のimgが画面上にあるか
     p = gui.locateOnScreen(src)
     time.sleep(1)
     if p == None: #画像ない
+        print(src,"画像が見つかりません")
         return False
+    print(src, "画像が見つかりしました！")
     return True #画像ある
 
 def image_click(src):
     p = gui.locateOnScreen(src)
+    # p = gui.locateOnScreen(src)
     time.sleep(1)
     x,y = gui.center(p)
     print("### click locatinon", p)
-    gui.moveTo(x,y ,duration=0.2) #duration:how many times do you use until click
-    time.sleep(1)
+    gui.moveTo(x,y ,duration=0.4) #duration:how many times do you use until click
+    # time.sleep(1)
     gui.click(x,y)
     
 
@@ -91,10 +94,10 @@ def is_tab(text):
 
 def close_browser():
     gui.hotkey("ctrl","2")
-    time.sleep(1)
+    time.sleep(0.1)
     gui.hotkey("ctrl","w")
-    
-
+    on_play = False
+    return on_play
 
 def replace_link_text(url):
     if "," in url:
@@ -113,15 +116,16 @@ on_play = False
 # 監視ループ
 while(True):
     img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
-    img.save("./img/{0}.jpg".format(img_name))
+    img.save("./diff_img/{0}.jpg".format(img_name))
     time.sleep(sleep_time)
     # print(init.pressed_position[0],init.pressed_position[1],init.width, init.height)
     ## 差分
-    img_0 = cv2.imread("./img/0.jpg", cv2.IMREAD_GRAYSCALE)
-    img_1 = cv2.imread("./img/1.jpg", cv2.IMREAD_GRAYSCALE)
-    diff = cv2.absdiff(img_0, img_1)
-    percent = sum(sum(diff))/1000
-    print(percent)
+    img_0 = cv2.imread("./diff_img/0.jpg", cv2.IMREAD_GRAYSCALE)
+    img_1 = cv2.imread("./diff_img/1.jpg", cv2.IMREAD_GRAYSCALE)
+    # 画像マッチング処理
+    diff = cv2.matchTemplate(img_0, img_1, cv2.TM_CCORR_NORMED)
+    minVal, maxVal, _, _ = cv2.minMaxLoc(diff)
+    print(minVal)
 
     
     if img_name == 0:
@@ -129,16 +133,15 @@ while(True):
     else:
         img_name = 0
             
-    
-    if percent > th:
+    if minVal < th:
         ## stop命令の場合
         if is_image(img_path_stop):
-            #前に開いたタブがあるなら閉じる
+            #タブがあるなら閉じる
             if is_tab("YouTube"):
-                close_browser()
+                on_play = close_browser()
+            else:
                 on_play = False
-                time.sleep(1)
-
+        
         if not on_play and is_image(img_path): #play状態じゃない時に実行
             on_play = True
             ## 画像クリックによる処理
@@ -150,8 +153,8 @@ while(True):
                 time.sleep(1)
                 ## screenを更新
                 img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
-                img.save("./img/0.jpg")
-                img.save("./img/1.jpg")
+                img.save("./diff_img/0.jpg")
+                img.save("./diff_img/1.jpg")
 
             except Exception as ex:
                 print("対象が見つかりませんでした。")
@@ -163,7 +166,7 @@ while(True):
             #         video_link = video_link[:-1]
 
             #     if is_browser_open: #前に開いたタブがあるなら閉じる
-            #         close_browser()
+            #         on_play = close_browser()
             #         is_browser_open = False
                 
             #     webbrowser.open(video_link)
@@ -175,11 +178,11 @@ while(True):
             #     time.sleep(1)
             #     ## screenを更新
             #     img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
-            #     img.save("./img/0.jpg")
-            #     img.save("./img/1.jpg")
+            #     img.save("./diff_img/0.jpg")
+            #     img.save("./diff_img/1.jpg")
 
         ## delete a file
-    os.remove("./img/{0}.jpg".format(img_name))
+    os.remove("./diff_img/{0}.jpg".format(img_name))
     
 
 

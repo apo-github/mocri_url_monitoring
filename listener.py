@@ -25,19 +25,25 @@ init.run() #最初のスクリーンショットをとる
 img_name = 1 #生成される画像名
 on_play = True #再生中かどうか
 
+
+### ※ pyauto guiが関わる操作の後には必ずsleepを1秒は入れる．
+
 def is_image(src): #指定のimgが画面上にあるか
     p = gui.locateOnScreen(src)
+    time.sleep(1)
     if p == None: #画像ない
         return False
     return True #画像ある
 
 def image_click(src):
     p = gui.locateOnScreen(src)
+    time.sleep(1)
     x,y = gui.center(p)
     print("### click locatinon", p)
-    gui.moveTo(x,y ,duration=0.5) #duration:how many times do you use until click
+    gui.moveTo(x,y ,duration=0.2) #duration:how many times do you use until click
+    time.sleep(1)
     gui.click(x,y)
-    time.sleep(3)
+    
 
 
 def list_windows():
@@ -57,12 +63,13 @@ def list_windows():
 def is_tab(text):
     res = False
     gui.hotkey("ctrl", "2")
+    time.sleep(1)
     for i in range(len(list_windows())):
         if text in list_windows()[i][0]: #あった場合
             print("{0}が開かれています".format(text))
             res = True
     gui.hotkey("ctrl", "1") #タブをもとに戻す
-    time.sleep(5)
+    time.sleep(1)
 
     return res
         
@@ -84,9 +91,9 @@ def is_tab(text):
 
 def close_browser():
     gui.hotkey("ctrl","2")
+    time.sleep(1)
     gui.hotkey("ctrl","w")
-    time.sleep(3)
-            
+    
 
 
 def replace_link_text(url):
@@ -130,21 +137,21 @@ while(True):
             if is_tab("YouTube"):
                 close_browser()
                 on_play = False
+                time.sleep(1)
 
         if not on_play and is_image(img_path): #play状態じゃない時に実行
             on_play = True
             ## 画像クリックによる処理
             try:
-                time.sleep(3)
                 image_click(img_path) #画像位置認識
-                ## mocriのタブへ移動 ctl+shift+tab
+                time.sleep(3) # youtubeのロード待ちなので，長めの3秒待ち
+                ## mocriのタブへ移動
                 gui.hotkey("ctrl", "1")
-                time.sleep(3)
+                time.sleep(1)
                 ## screenを更新
                 img = gui.screenshot(region=(init.pressed_position[0],init.pressed_position[1],init.width, init.height))
                 img.save("./img/0.jpg")
                 img.save("./img/1.jpg")
-                time.sleep(2)
 
             except Exception as ex:
                 print("対象が見つかりませんでした。")
